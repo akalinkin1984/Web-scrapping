@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "link": "https://spb.hh.ru/vacancy/94847823?query=python&hhtmFrom=vacancy_search_list",
+    "salary": null,
+    "company": "АНО ЦИСМ",
+    "city": "Москва"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/96006707?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "до 100 000 ₽ на руки",
+    "company": "KTS",
+    "city": "Москва"
+  },
+  {
+    "link": "https://spb.hh.ru/vacancy/94996808?query=python&hhtmFrom=vacancy_search_list",
+    "salary": "до 400 000 ₽ на руки",
+    "company": "ООО АЙ ТИ ТЕХНОЛОДЖИС",
+    "city": "Санкт-Петербург"
+  }
+]
