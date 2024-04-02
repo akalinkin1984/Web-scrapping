@@ -1,52 +1,67 @@
+import json
+
 import requests
 import bs4
 from fake_headers import Headers
-
-
-KEYWORDS = ['дизайн', 'фото', 'web', 'python']
 
 
 def get_headers():
     return Headers(os='win', browser='chrome').generate()
 
 
-def get_info_articles_habr(words_list: list):
+def get_info_vacancy_python(words: list):
     result_list = []
 
-    response = requests.get('https://habr.com/ru/articles/', headers=get_headers())
+    response = requests.get('https://spb.hh.ru/search/vacancy?text=python&area=1&area=2', headers=get_headers())
     html_data = response.text
 
     soup = bs4.BeautifulSoup(html_data, features='lxml')
-    tag_div_article_list = soup.find('div', class_='tm-articles-list')
-    article_tags = tag_div_article_list.find_all('article')
+    tag_div_vacancy_list = soup.find('div', id='a11y-main-content')
+    vacancy_list = tag_div_vacancy_list.find_all('div', class_='serp-item')
 
-    for article_tag in article_tags:
-        h2_tag = article_tag.find('h2', class_='tm-title')
-        relative_link = h2_tag.find('a').get('href')
-        absolute_link = f'https://habr.com{relative_link}'
+    for vacancy in vacancy_list:
+        link = vacancy.find('a', class_='bloko-link').get('href')
 
-        article_response = requests.get(absolute_link, headers=get_headers())
-        article_html_data = article_response.text
+        response = requests.get(link, headers=get_headers())
+        vacancy_html_data = response.text
 
-        article_soup = bs4.BeautifulSoup(article_html_data, features='lxml')
-        text = article_soup.find('div', class_='article-formatted-body').text
+        vacancy_soup = bs4.BeautifulSoup(vacancy_html_data, features='lxml')
+        if vacancy_soup is not None:
+            text = vacancy_soup.find('div', class_='g-user-content').text
 
-        for word in words_list:
-            if word in text:
-                pub_time = article_tag.find('time').get('datetime')
-                title = h2_tag.text
-                result_list.append(
-                    {
-                        'pub_time': pub_time,
-                        'title': title,
-                        'link': absolute_link,
-                    }
-                                )
-                break
+            for word in words:
+                if word in text:
+                    salary = vacancy_soup.find('div', {'data-qa': 'vacancy-salary'})
+                    if salary is not None:
+                        salary = ' '.join(salary.text.split())
 
-    for result in result_list:
-        print(f"{result.get('pub_time')} - {result.get('title')} - {result.get('link')}")
+                    company = vacancy_soup.find('span', class_='vacancy-company-name').text.strip()
+                    company = ' '.join(company.split())
+
+                    city = vacancy_soup.find('span', {'data-qa': 'vacancy-view-raw-address'})
+                    if city is None:
+                        city = vacancy_soup.find('p', {'data-qa': 'vacancy-view-location'}).text.strip().split(', ')[0]
+                    else:
+                        city = city.text.strip().split(', ')[0]
+
+                    result_list.append(
+                        {
+                            'link': link,
+                            'salary': salary,
+                            'company': company,
+                            'city': city
+                        }
+                    )
+
+                    break
+
+            with open('result_file.json', 'w', encoding='utf-8') as f:
+                json.dump(result_list, f, ensure_ascii=False, indent=2)
+
+        else:
+            print('Произошла ошибка! Попробуйте еще раз!')
 
 
 if __name__ == '__main__':
-    get_info_articles_habr(KEYWORDS)
+    KEYWORDS = ['Django', 'Flask']
+    get_info_vacancy_python(KEYWORDS)
